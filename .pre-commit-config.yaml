@@ -1,0 +1,45 @@
+ci:
+  autoupdate_schedule: monthly
+
+default_language_version:
+  python: python3
+
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+      - id: trailing-whitespace
+  - repo: https://github.com/PyCQA/flake8
+    rev: 7.3.0
+    hooks:
+      - id: flake8
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.37.1
+    hooks:
+      - id: yamllint
+  - repo: https://github.com/awslabs/cfn-python-lint
+    rev: v1.40.3
+    hooks:
+      - id: cfn-python-lint
+        args:
+          - "-i=E1001"
+        exclude: |
+          (?x)(
+            ^.venv/|
+            ^tests/|
+            ^docker/|
+            ^temp/|
+            ^.github/|
+            ^.pre-commit-config.yaml
+          )
+  - repo: https://github.com/psf/black-pre-commit-mirror
+    rev: 25.9.0
+    hooks:
+      - id: black
+  - repo: https://github.com/sirosen/check-jsonschema
+    rev: 0.34.1
+    hooks:
+      - id: check-github-workflows
+      - id: check-github-actions
