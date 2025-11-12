@@ -127,6 +127,46 @@ will take precedence.
 
 > [!NOTE]
 > Ensure that `VPC_CIDR` is unique within your AWS organization.
+
+## Required AWS Secrets
+
+Before deploying the synapse-mcp service, you must create the following secrets in AWS Secrets Manager:
+
+1. **synapse-mcp/oauth-client-id**
+   - Contains the Synapse OAuth client ID
+   - Create with: `aws secretsmanager create-secret --name synapse-mcp-{env}/oauth-client-id --secret-string "your-client-id"`
+
+2. **synapse-mcp/oauth-client-secret**
+   - Contains the Synapse OAuth client secret
+   - Create with: `aws secretsmanager create-secret --name synapse-mcp-{env}/oauth-client-secret --secret-string "your-client-secret"`
+
+These secrets are automatically injected as environment variables (`SYNAPSE_OAUTH_CLIENT_ID` and `SYNAPSE_OAUTH_CLIENT_SECRET`) into the ECS container.
+
+> [!IMPORTANT]
+> Ensure these secrets exist in the same AWS region where you're deploying the stack.
+
+## Valkey Infrastructure
+
+The infrastructure includes AWS ElastiCache Serverless for Valkey (Redis-compatible) for:
+- **Client Registry**: OAuth client registrations (MCP clients like Claude Desktop, VS Code)
+- **Session Storage**: User authentication tokens and sessions
+
+### Valkey Configuration
+
+Valkey serverless settings are configured per environment in the config files:
+
+- **Engine Version**: Valkey 8.2 (latest)
+- **Capacity**: Auto-scaling with configurable max ECPUs and storage
+  - **dev/stage/prod**: Currently set to the minimum of 1000 ECPUs/sec, 1 GB storage
+
+Key features:
+- **Serverless**: Automatically scales capacity based on demand
+- **Encryption**: TLS in-transit and at-rest encryption enabled
+- **Daily Snapshots**: Automated daily snapshots for data durability
+- **Security**: Private subnet only, accessible only from ECS tasks
+- **Connection**: Automatically configured via `REDIS_URL` environment variable
+
+The Valkey connection URL is stored in AWS Systems Manager Parameter Store at `/synapse-mcp/{environment}-redis/redis-url` and automatically injected into the ECS container.
 Refer to our [guidance](https://sagebionetworks.jira.com/wiki/spaces/IT/pages/2850586648/Setup+AWS+VPC) on selecting a unique CIDR block.
 
 ## Certificates

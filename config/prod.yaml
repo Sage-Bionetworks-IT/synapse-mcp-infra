@@ -1,5 +1,10 @@
-VPC_CIDR: 10.254.174.0/24
+VPC_CIDR: 10.254.102.0/24
 FQDN: prod.mydomain.io
+
+# Valkey Serverless Configuration
+VALKEY_ENGINE_VERSION: "8.2"
+VALKEY_MAX_ECPU_PER_SECOND: 1000  # ElastiCache Processing Units per second
+VALKEY_MAX_STORAGE_GB: 1  # Maximum storage in GB
 
 # Optional
 # CERTIFICATE_ARN: >-
