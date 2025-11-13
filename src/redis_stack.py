@@ -3,7 +3,6 @@ import aws_cdk as cdk
 from aws_cdk import (
     aws_ec2 as ec2,
     aws_elasticache as elasticache,
-    aws_ssm as ssm,
 )
 
 from constructs import Construct
@@ -72,21 +71,11 @@ class RedisStack(cdk.Stack):
 
         # Get the endpoint from the serverless cache
         redis_endpoint = self.serverless_cache.attr_endpoint_address
-        redis_port = self.serverless_cache.attr_endpoint_port  # -------------------
-        # Store Valkey URL in Parameter Store
-        # -------------------
-        # Note: For TLS-enabled clusters, use rediss:// prefix
+        redis_port = self.serverless_cache.attr_endpoint_port
+
+        # Construct Redis URL (using rediss:// for TLS-enabled connection)
         # Valkey is Redis-compatible, so we use the rediss:// scheme
         redis_url = f"rediss://{redis_endpoint}:{redis_port}"
-
-        self.redis_url_parameter = ssm.StringParameter(
-            self,
-            "RedisUrlParameter",
-            description="Valkey connection URL for Synapse MCP (Redis-compatible)",
-            parameter_name=f"/synapse-mcp/{construct_id}/redis-url",
-            string_value=redis_url,
-            tier=ssm.ParameterTier.STANDARD,
-        )
 
         # -------------------
         # Outputs
@@ -107,9 +96,9 @@ class RedisStack(cdk.Stack):
 
         cdk.CfnOutput(
             self,
-            "RedisUrlParameterName",
-            value=self.redis_url_parameter.parameter_name,
-            description="SSM Parameter name for Valkey URL",
+            "RedisUrl",
+            value=redis_url,
+            description="Valkey connection URL (Redis-compatible)",
         )
 
         cdk.CfnOutput(

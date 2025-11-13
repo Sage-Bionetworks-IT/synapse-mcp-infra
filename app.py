@@ -94,7 +94,7 @@ redis_stack = RedisStack(
 # Add Valkey URL to app service environment variables (using REDIS_URL for compatibility)
 app_stack.container.add_environment("REDIS_URL", redis_stack.redis_url)
 
-# Grant the ECS task execution role permission to read Valkey URL from Parameter Store
-redis_stack.redis_url_parameter.grant_read(app_stack.task_definition.execution_role)
+# Ensure Redis stack is created before app stack
+app_stack.add_dependency(redis_stack)
 
 cdk_app.synth()
