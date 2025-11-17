@@ -1,11 +1,10 @@
 VPC_CIDR: 10.254.102.0/24
-FQDN: prod.mydomain.io
+FQDN: mcp.synapse.org
 
 # Valkey Serverless Configuration
 VALKEY_ENGINE_VERSION: "8.2"
 VALKEY_MAX_ECPU_PER_SECOND: 1000  # ElastiCache Processing Units per second
 VALKEY_MAX_STORAGE_GB: 1  # Maximum storage in GB
 
-# Optional
-# CERTIFICATE_ARN: >-
-#  arn:aws:acm:us-east-1:XXXXXXXXX:certificate/69b3ba97-b382-4648-8f94-a250b77b4994
+CERTIFICATE_ARN: >-
+  arn:aws:acm:us-east-1:766808016710:certificate/9e8d8422-0c9e-4098-8d5b-ef0d76b2c614
