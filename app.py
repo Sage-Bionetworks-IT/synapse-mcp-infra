@@ -3,6 +3,7 @@ import aws_cdk as cdk
 from src.ecs_stack import EcsStack
 from src.load_balancer_stack import LoadBalancerStack
 from src.network_stack import NetworkStack
+from src.redis_stack import RedisStack
 from src.service_props import ServiceProps
 from src.service_stack import LoadBalancedServiceStack
 from src.utils import load_context_config
@@ -10,7 +11,7 @@ from src.utils import load_context_config
 cdk_app = cdk.App()
 env_name = cdk_app.node.try_get_context("env") or "dev"
 config = load_context_config(env_name=env_name)
-STACK_NAME_PREFIX = f"app-{env_name}"
+STACK_NAME_PREFIX = f"synapse-mcp-{env_name}"
 FQDN = config["FQDN"]
 TAGS = config["TAGS"]
 APP_VERSION = "latest"
@@ -45,15 +46,30 @@ load_balancer_stack = LoadBalancerStack(
 load_balancer_stack.add_dependency(ecs_stack)
 
 app_props = ServiceProps(
-    ecs_task_cpu=256,
-    ecs_task_memory=512,
-    container_name="my-app",
-    # can also reference github with 'ghcr.io/sage-bionetworks/my-app:{APP_VERSION}'
-    container_location=f"nginx:{APP_VERSION}",
-    container_port=80,
+    ecs_task_cpu=512,
+    ecs_task_memory=1024,
+    container_name="synapse-mcp",
+    # TODO: Update this to use the correct version once we have a stable release
+    container_location="ghcr.io/sage-bionetworks/synapse-mcp:edge",
+    container_port=9000,
     container_env_vars={
-        "APP_VERSION": f"{APP_VERSION}",
+        "MCP_SERVER_URL": f"https://{FQDN}/mcp",
+        "MCP_TRANSPORT": "streamable-http",
+        "SYNAPSE_OAUTH_REDIRECT_URI": f"https://{FQDN}/oauth/callback",
+        "SYNAPSE_MCP_CLIENT_REGISTRY_BACKEND": "redis",
+        # TODO: Remove me, this is temporary and not real
+        "SYNAPSE_PAT": "asdf",
     },
+    # container_secrets=[
+    #     ServiceSecret(
+    #         secret_name=f"{STACK_NAME_PREFIX}/oauth-client-id",
+    #         environment_key="SYNAPSE_OAUTH_CLIENT_ID"
+    #     ),
+    #     ServiceSecret(
+    #         secret_name=f"{STACK_NAME_PREFIX}/oauth-client-secret",
+    #         environment_key="SYNAPSE_OAUTH_CLIENT_SECRET"
+    #     ),
+    # ],
 )
 app_stack = LoadBalancedServiceStack(
     scope=cdk_app,
@@ -62,6 +78,23 @@ app_stack = LoadBalancedServiceStack(
     cluster=ecs_stack.cluster,
     props=app_props,
     load_balancer=load_balancer_stack.alb,
+    health_check_path="/health",
 )
+
+# Create Valkey stack (Serverless - Redis-compatible)
+redis_stack = RedisStack(
+    scope=cdk_app,
+    construct_id=f"{STACK_NAME_PREFIX}-redis",
+    vpc=network_stack.vpc,
+    engine_version=config.get("VALKEY_ENGINE_VERSION", "8.2"),
+    max_ecpu_per_second=config.get("VALKEY_MAX_ECPU_PER_SECOND", 1000),
+    max_storage_gb=config.get("VALKEY_MAX_STORAGE_GB", 1),
+)
+
+# Add Valkey URL to app service environment variables (using REDIS_URL for compatibility)
+app_stack.container.add_environment("REDIS_URL", redis_stack.redis_url)
+
+# Ensure Redis stack is created before app stack
+app_stack.add_dependency(redis_stack)
 
 cdk_app.synth()
