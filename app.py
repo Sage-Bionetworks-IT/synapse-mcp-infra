@@ -79,6 +79,8 @@ app_stack = LoadBalancedServiceStack(
     props=app_props,
     load_balancer=load_balancer_stack.alb,
     health_check_path="/health",
+    enable_https=True,
+    certificate_arn=config.get("CERTIFICATE_ARN"),
 )
 
 # Create Valkey stack (Serverless - Redis-compatible)
