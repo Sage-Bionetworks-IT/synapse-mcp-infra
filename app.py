@@ -62,7 +62,7 @@ app_props = ServiceProps(
     container_secrets=[
         ServiceSecret(
             secret_name=f"{STACK_NAME_PREFIX}/oauth-client-secretval",
-            environment_key="SYNAPSE_OAUTH_CLIENT_SECRET"
+            environment_key="SYNAPSE_OAUTH_CLIENT_SECRET",
         ),
     ],
 )
