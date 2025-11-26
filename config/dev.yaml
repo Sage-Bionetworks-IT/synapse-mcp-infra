@@ -8,3 +8,6 @@ VALKEY_MAX_STORAGE_GB: 1  # Maximum storage in GB
 
 CERTIFICATE_ARN: >-
   arn:aws:acm:us-east-1:631692904429:certificate/fa90fc37-4661-4b6f-907f-05a1d5374dec
+
+MCP_SERVER_ENV: dev
+SYNAPSE_OAUTH_CLIENT_ID: "100035"
