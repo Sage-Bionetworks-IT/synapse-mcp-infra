@@ -132,15 +132,11 @@ will take precedence.
 
 Before deploying the synapse-mcp service, you must create the following secrets in AWS Secrets Manager:
 
-1. **synapse-mcp/oauth-client-id**
-   - Contains the Synapse OAuth client ID
-   - Create with: `aws secretsmanager create-secret --name synapse-mcp-{env}/oauth-client-id --secret-string "your-client-id"`
-
-2. **synapse-mcp/oauth-client-secret**
+1. **synapse-mcp/oauth-client-secret**
    - Contains the Synapse OAuth client secret
-   - Create with: `aws secretsmanager create-secret --name synapse-mcp-{env}/oauth-client-secret --secret-string "your-client-secret"`
+   - Create with: `aws secretsmanager create-secret --name synapse-mcp-{env}/oauth-client-secretval --secret-string "your-client-secret"`
 
-These secrets are automatically injected as environment variables (`SYNAPSE_OAUTH_CLIENT_ID` and `SYNAPSE_OAUTH_CLIENT_SECRET`) into the ECS container.
+These secrets are automatically injected as environment variables (`SYNAPSE_OAUTH_CLIENT_SECRET`) into the ECS container.
 
 > [!IMPORTANT]
 > Ensure these secrets exist in the same AWS region where you're deploying the stack.

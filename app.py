@@ -4,7 +4,7 @@ from src.ecs_stack import EcsStack
 from src.load_balancer_stack import LoadBalancerStack
 from src.network_stack import NetworkStack
 from src.redis_stack import RedisStack
-from src.service_props import ServiceProps
+from src.service_props import ServiceProps, ServiceSecret
 from src.service_stack import LoadBalancedServiceStack
 from src.utils import load_context_config
 
@@ -49,27 +49,22 @@ app_props = ServiceProps(
     ecs_task_cpu=512,
     ecs_task_memory=1024,
     container_name="synapse-mcp",
-    # TODO: Update this to use the correct version once we have a stable release
-    container_location="ghcr.io/sage-bionetworks/synapse-mcp:edge",
+    container_location="ghcr.io/sage-bionetworks/synapse-mcp:v0.1.1",
     container_port=9000,
     container_env_vars={
         "MCP_SERVER_URL": f"https://{FQDN}/mcp",
         "MCP_TRANSPORT": "streamable-http",
         "SYNAPSE_OAUTH_REDIRECT_URI": f"https://{FQDN}/oauth/callback",
         "SYNAPSE_MCP_CLIENT_REGISTRY_BACKEND": "redis",
-        # TODO: Remove me, this is temporary and not real
-        "SYNAPSE_PAT": "asdf",
+        "SYNAPSE_ENV": config.get("MCP_SERVER_ENV"),
+        "SYNAPSE_OAUTH_CLIENT_ID": config.get("SYNAPSE_OAUTH_CLIENT_ID"),
     },
-    # container_secrets=[
-    #     ServiceSecret(
-    #         secret_name=f"{STACK_NAME_PREFIX}/oauth-client-id",
-    #         environment_key="SYNAPSE_OAUTH_CLIENT_ID"
-    #     ),
-    #     ServiceSecret(
-    #         secret_name=f"{STACK_NAME_PREFIX}/oauth-client-secret",
-    #         environment_key="SYNAPSE_OAUTH_CLIENT_SECRET"
-    #     ),
-    # ],
+    container_secrets=[
+        ServiceSecret(
+            secret_name=f"{STACK_NAME_PREFIX}/oauth-client-secretval",
+            environment_key="SYNAPSE_OAUTH_CLIENT_SECRET",
+        ),
+    ],
 )
 app_stack = LoadBalancedServiceStack(
     scope=cdk_app,
