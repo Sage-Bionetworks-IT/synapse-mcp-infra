@@ -49,7 +49,7 @@ app_props = ServiceProps(
     ecs_task_cpu=512,
     ecs_task_memory=1024,
     container_name="synapse-mcp",
-    container_location="ghcr.io/sage-bionetworks/synapse-mcp:v0.1.2",
+    container_location="ghcr.io/sage-bionetworks/synapse-mcp:v0.1.3",
     container_port=9000,
     container_env_vars={
         "MCP_SERVER_URL": f"https://{FQDN}/mcp",
