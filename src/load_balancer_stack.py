@@ -46,6 +46,12 @@ class LoadBalancerStack(cdk.Stack):
                             vendor_name="AWS",
                             excluded_rules=[
                                 wafv2.CfnWebACL.ExcludedRuleProperty(
+                                    name="EC2MetaDataSSRF_BODY"
+                                ),
+                                wafv2.CfnWebACL.ExcludedRuleProperty(
+                                    name="EC2MetaDataSSRF_QUERYARGUMENTS"
+                                ),
+                                wafv2.CfnWebACL.ExcludedRuleProperty(
                                     name="GenericRFI_QUERYARGUMENTS"
                                 ),
                             ],
