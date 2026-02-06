@@ -35,8 +35,8 @@ class LoadBalancerStack(cdk.Stack):
                 sampled_requests_enabled=True,
             ),
             rules=[
-                # Rules that provide protection against exploitation of a wide range of vulnerabilities,
-                # including those described in OWASP top 10 publications
+                # OWASP top 10 protection with GenericRFI exclusion
+                # for OAuth redirect_uri parameters
                 wafv2.CfnWebACL.RuleProperty(
                     name="AWSManagedRulesCommonRuleSet",
                     priority=0,
@@ -44,6 +44,17 @@ class LoadBalancerStack(cdk.Stack):
                         managed_rule_group_statement=wafv2.CfnWebACL.ManagedRuleGroupStatementProperty(
                             name="AWSManagedRulesCommonRuleSet",
                             vendor_name="AWS",
+                            excluded_rules=[
+                                wafv2.CfnWebACL.ExcludedRuleProperty(
+                                    name="EC2MetaDataSSRF_BODY"
+                                ),
+                                wafv2.CfnWebACL.ExcludedRuleProperty(
+                                    name="EC2MetaDataSSRF_QUERYARGUMENTS"
+                                ),
+                                wafv2.CfnWebACL.ExcludedRuleProperty(
+                                    name="GenericRFI_QUERYARGUMENTS"
+                                ),
+                            ],
                         )
                     ),
                     override_action=wafv2.CfnWebACL.OverrideActionProperty(none={}),
