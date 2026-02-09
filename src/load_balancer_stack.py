@@ -35,8 +35,9 @@ class LoadBalancerStack(cdk.Stack):
                 sampled_requests_enabled=True,
             ),
             rules=[
-                # OWASP top 10 protection with GenericRFI exclusion
-                # for OAuth redirect_uri parameters
+                # OWASP top 10 protection with SSRF/RFI exclusions
+                # required for OAuth redirect_uri parameters in both
+                # query strings and POST bodies (client registration)
                 wafv2.CfnWebACL.RuleProperty(
                     name="AWSManagedRulesCommonRuleSet",
                     priority=0,
@@ -53,6 +54,14 @@ class LoadBalancerStack(cdk.Stack):
                                 ),
                                 wafv2.CfnWebACL.ExcludedRuleProperty(
                                     name="GenericRFI_QUERYARGUMENTS"
+                                ),
+                                # OAuth Dynamic Client Registration sends
+                                # redirect_uris with http://127.0.0.1 in the
+                                # JSON body (e.g. Claude Code).  Without this
+                                # exclusion the WAF blocks those requests as
+                                # suspected Remote File Inclusion.
+                                wafv2.CfnWebACL.ExcludedRuleProperty(
+                                    name="GenericRFI_BODY"
                                 ),
                             ],
                         )
