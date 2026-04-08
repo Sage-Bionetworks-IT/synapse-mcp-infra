@@ -306,5 +306,6 @@ class LoadBalancedServiceStack(ServiceStack):
                 health_check=elbv2.HealthCheck(
                     path=health_check_path,
                     interval=duration.minutes(health_check_interval),
+                    unhealthy_threshold_count=5,
                 ),
             )
