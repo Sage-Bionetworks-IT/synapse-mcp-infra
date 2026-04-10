@@ -63,6 +63,14 @@ class LoadBalancerStack(cdk.Stack):
                                 wafv2.CfnWebACL.ExcludedRuleProperty(
                                     name="GenericRFI_BODY"
                                 ),
+                                # Some MCP clients (e.g. Codex CLI via reqwest,
+                                # rmcp) do not send a User-Agent header.
+                                # Without this exclusion the WAF returns 403
+                                # on OAuth discovery requests, preventing
+                                # authentication.
+                                wafv2.CfnWebACL.ExcludedRuleProperty(
+                                    name="NoUserAgent_HEADER"
+                                ),
                             ],
                         )
                     ),
