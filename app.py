@@ -59,6 +59,7 @@ app_props = ServiceProps(
         "SYNAPSE_MCP_CLIENT_REGISTRY_BACKEND": "redis",
         "SYNAPSE_ENV": config.get("MCP_SERVER_ENV"),
         "SYNAPSE_OAUTH_CLIENT_ID": config.get("SYNAPSE_OAUTH_CLIENT_ID"),
+        "LOG_LEVEL": config.get("LOG_LEVEL", "INFO"),
     },
     container_secrets=[
         ServiceSecret(
