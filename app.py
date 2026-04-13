@@ -50,7 +50,7 @@ app_props = ServiceProps(
     ecs_task_memory=1024,
     auto_scale_max_capacity=3,
     container_name="synapse-mcp",
-    container_location="ghcr.io/sage-bionetworks/synapse-mcp:v0.4.3",
+    container_location="ghcr.io/sage-bionetworks/synapse-mcp:v0.5.1",
     container_port=9000,
     container_env_vars={
         "MCP_SERVER_URL": f"https://{FQDN}/mcp",
@@ -59,6 +59,7 @@ app_props = ServiceProps(
         "SYNAPSE_MCP_CLIENT_REGISTRY_BACKEND": "redis",
         "SYNAPSE_ENV": config.get("MCP_SERVER_ENV"),
         "SYNAPSE_OAUTH_CLIENT_ID": config.get("SYNAPSE_OAUTH_CLIENT_ID"),
+        "LOG_LEVEL": config.get("LOG_LEVEL", "INFO"),
     },
     container_secrets=[
         ServiceSecret(
