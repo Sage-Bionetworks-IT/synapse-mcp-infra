@@ -12,3 +12,7 @@ CERTIFICATE_ARN: >-
 MCP_SERVER_ENV: staging
 SYNAPSE_OAUTH_CLIENT_ID: "100439"
 LOG_LEVEL: DEBUG
+
+MONITORING:
+  enabled: true
+  notification_email: "dpe@sagebase.org"

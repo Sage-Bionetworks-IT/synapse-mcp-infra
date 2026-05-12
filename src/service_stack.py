@@ -256,7 +256,7 @@ class LoadBalancedServiceStack(ServiceStack):
                 certificates=[self.cert],
             )
 
-            https_listener.add_targets(
+            self.target_group = https_listener.add_targets(
                 "HttpsTarget",
                 port=props.container_port,
                 protocol=elbv2.ApplicationProtocol.HTTP,
@@ -299,7 +299,7 @@ class LoadBalancedServiceStack(ServiceStack):
                 protocol=elbv2.ApplicationProtocol.HTTP,
             )
 
-            http_listener.add_targets(
+            self.target_group = http_listener.add_targets(
                 "HttpTarget",
                 port=props.container_port,
                 protocol=elbv2.ApplicationProtocol.HTTP,
