@@ -6,7 +6,9 @@ from pathlib import Path
 
 def _load_handler(monkeypatch, webhook_url="https://hooks.slack.com/services/T/B/x"):
     monkeypatch.setenv("WEBHOOK_URL", webhook_url)
-    lambda_dir = Path(__file__).resolve().parents[2] / "src" / "lambda" / "slack_notifier"
+    lambda_dir = (
+        Path(__file__).resolve().parents[2] / "src" / "lambda" / "slack_notifier"
+    )
     monkeypatch.syspath_prepend(str(lambda_dir))
     sys.modules.pop("index", None)
     return importlib.import_module("index")
@@ -30,9 +32,7 @@ def test_handler_posts_slack_payload(monkeypatch):
     monkeypatch.setattr(handler_module.urllib.request, "urlopen", fake_urlopen)
 
     event = {
-        "Records": [
-            {"Sns": {"Subject": "ALARM: ecs-cpu", "Message": "CPU > 80%"}}
-        ]
+        "Records": [{"Sns": {"Subject": "ALARM: ecs-cpu", "Message": "CPU > 80%"}}]
     }
     result = handler_module.handler(event, None)
 
