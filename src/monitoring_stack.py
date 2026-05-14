@@ -1,4 +1,3 @@
-import json
 from typing import Any, Dict
 
 import aws_cdk as cdk
@@ -65,7 +64,8 @@ class MonitoringStack(cdk.Stack):
                 "SlackNotifier",
                 runtime=lambda_.Runtime.PYTHON_3_12,
                 handler="index.handler",
-                code=lambda_.Code.from_inline(_slack_lambda_code(slack_webhook_url)),
+                code=lambda_.Code.from_asset("src/lambda/slack_notifier"),
+                environment={"WEBHOOK_URL": slack_webhook_url},
                 timeout=cdk.Duration.seconds(10),
             )
             self.alarm_topic.add_subscription(subs.LambdaSubscription(slack_handler))
@@ -362,28 +362,3 @@ class MonitoringStack(cdk.Stack):
                 value=dashboard_url,
                 description="CloudWatch dashboard URL",
             )
-
-
-def _slack_lambda_code(webhook_url: str) -> str:
-    """Return inline Python code for a Lambda that posts SNS messages to Slack."""
-    safe_url = json.dumps(webhook_url)
-    return f"""\
-import json
-import urllib.request
-
-WEBHOOK_URL = {safe_url}
-
-def handler(event, context):
-    for record in event["Records"]:
-        sns_message = record["Sns"]
-        payload = json.dumps({{
-            "text": f"*{{sns_message['Subject']}}*\\n{{sns_message['Message']}}"
-        }}).encode("utf-8")
-        req = urllib.request.Request(
-            WEBHOOK_URL,
-            data=payload,
-            headers={{"Content-Type": "application/json"}},
-        )
-        urllib.request.urlopen(req)
-    return {{"statusCode": 200}}
-"""
