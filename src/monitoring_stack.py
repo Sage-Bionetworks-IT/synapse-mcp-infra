@@ -197,10 +197,11 @@ class MonitoringStack(cdk.Stack):
                 statistic="Minimum",
             ),
             threshold=alarm_config["running_task_min"],
-            evaluation_periods=1,
+            evaluation_periods=3,
+            datapoints_to_alarm=2,
             comparison_operator=cw.ComparisonOperator.LESS_THAN_THRESHOLD,
             alarm_description="ECS service has no running tasks — service is down",
-            treat_missing_data=cw.TreatMissingData.BREACHING,
+            treat_missing_data=cw.TreatMissingData.MISSING,
         )
         running_tasks_alarm.add_alarm_action(alarm_action)
         running_tasks_alarm.add_ok_action(alarm_action)
@@ -229,7 +230,7 @@ class MonitoringStack(cdk.Stack):
                             period=cdk.Duration.minutes(1),
                         )
                     ],
-                    width=8,
+                    width=12,
                 ),
                 cw.GraphWidget(
                     title="Memory Utilization (%)",
@@ -239,24 +240,7 @@ class MonitoringStack(cdk.Stack):
                             period=cdk.Duration.minutes(1),
                         )
                     ],
-                    width=8,
-                ),
-                cw.GraphWidget(
-                    title="Running Task Count",
-                    left=[
-                        cw.Metric(
-                            namespace="ECS/ContainerInsights",
-                            metric_name="RunningTaskCount",
-                            dimensions_map={
-                                "ClusterName": cluster.cluster_name,
-                                "ServiceName": service.service_name,
-                            },
-                            period=cdk.Duration.minutes(1),
-                            statistic="Average",
-                            label="Running Tasks",
-                        )
-                    ],
-                    width=8,
+                    width=12,
                 ),
             )
 
@@ -345,9 +329,28 @@ class MonitoringStack(cdk.Stack):
                     ],
                     width=8,
                 ),
-                cw.AlarmWidget(
+                cw.GraphWidget(
                     title="Running Tasks (alarm if zero)",
-                    alarm=running_tasks_alarm,
+                    left=[
+                        cw.Metric(
+                            namespace="ECS/ContainerInsights",
+                            metric_name="RunningTaskCount",
+                            dimensions_map={
+                                "ClusterName": cluster.cluster_name,
+                                "ServiceName": service.service_name,
+                            },
+                            period=cdk.Duration.minutes(1),
+                            statistic="Minimum",
+                            label="Running Tasks",
+                        )
+                    ],
+                    left_annotations=[
+                        cw.HorizontalAnnotation(
+                            value=alarm_config["running_task_min"],
+                            label=f"Alarm threshold ({alarm_config['running_task_min']})",
+                            color=cw.Color.RED,
+                        )
+                    ],
                     width=8,
                 ),
             )
