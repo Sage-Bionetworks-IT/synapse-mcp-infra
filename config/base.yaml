@@ -1,2 +1,18 @@
 TAGS:
   CostCenter: NO PROGRAM / 000000
+
+# Monitoring defaults — override in environment configs to enable.
+# Set enabled: true and notification_email in your env config to activate.
+MONITORING:
+  enabled: false
+  notification_email: ""
+  slack_webhook_url: ""
+  enable_dashboard: true
+  alarms:
+    ecs_cpu_threshold: 80
+    ecs_memory_threshold: 80
+    alb_5xx_threshold: 10
+    alb_p99_latency_threshold: 5
+    unhealthy_host_threshold: 1
+    healthy_host_min: 1
+    running_task_min: 1

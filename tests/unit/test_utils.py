@@ -4,7 +4,58 @@ import tempfile
 import yaml
 from pathlib import Path
 
-from src.utils import load_context_config
+from src.utils import _deep_merge, load_context_config
+
+
+class TestDeepMerge:
+    """Test suite for the _deep_merge function."""
+
+    def test_flat_merge(self):
+        """Test merging flat dicts behaves like shallow merge."""
+        base = {"a": 1, "b": 2}
+        override = {"b": 3, "c": 4}
+        assert _deep_merge(base, override) == {"a": 1, "b": 3, "c": 4}
+
+    def test_nested_merge_preserves_base_keys(self):
+        """Test that nested override only replaces specified keys."""
+        base = {
+            "MONITORING": {
+                "notification_email": "",
+                "alarms": {
+                    "ecs_cpu_threshold": 80,
+                    "ecs_memory_threshold": 80,
+                },
+            }
+        }
+        override = {
+            "MONITORING": {
+                "notification_email": "team@example.com",
+            }
+        }
+        result = _deep_merge(base, override)
+        assert result["MONITORING"]["notification_email"] == "team@example.com"
+        assert result["MONITORING"]["alarms"]["ecs_cpu_threshold"] == 80
+        assert result["MONITORING"]["alarms"]["ecs_memory_threshold"] == 80
+
+    def test_nested_merge_overrides_specific_keys(self):
+        """Test that specific nested keys can be overridden."""
+        base = {"alarms": {"cpu": 80, "memory": 80}}
+        override = {"alarms": {"cpu": 70}}
+        result = _deep_merge(base, override)
+        assert result == {"alarms": {"cpu": 70, "memory": 80}}
+
+    def test_does_not_mutate_base(self):
+        """Test that the base dict is not modified."""
+        base = {"a": {"b": 1}}
+        override = {"a": {"b": 2}}
+        _deep_merge(base, override)
+        assert base == {"a": {"b": 1}}
+
+    def test_override_dict_with_non_dict(self):
+        """Test that a non-dict value replaces a dict value."""
+        base = {"a": {"b": 1}}
+        override = {"a": "string"}
+        assert _deep_merge(base, override) == {"a": "string"}
 
 
 class TestLoadContextConfig:
@@ -145,6 +196,32 @@ class TestLoadContextConfig:
             }
 
             assert result == expected
+
+    def test_base_config_deep_merging(self):
+        """Test that nested dicts in base.yaml are deep-merged with env config."""
+        with tempfile.TemporaryDirectory() as temp_dir:
+            base_file = Path(temp_dir) / "base.yaml"
+            base_config = {
+                "MONITORING": {
+                    "notification_email": "",
+                    "alarms": {"ecs_cpu_threshold": 80, "ecs_memory_threshold": 80},
+                }
+            }
+            with open(base_file, "w") as f:
+                yaml.dump(base_config, f)
+
+            env_file = Path(temp_dir) / "dev.yaml"
+            env_config = {
+                "FQDN": "dev.example.com",
+                "MONITORING": {"notification_email": "team@example.com"},
+            }
+            with open(env_file, "w") as f:
+                yaml.dump(env_config, f)
+
+            result = load_context_config("dev", temp_dir)
+            assert result["FQDN"] == "dev.example.com"
+            assert result["MONITORING"]["notification_email"] == "team@example.com"
+            assert result["MONITORING"]["alarms"]["ecs_cpu_threshold"] == 80
 
     def test_no_base_config(self):
         """Test loading config when base.yaml doesn't exist."""
