@@ -9,6 +9,12 @@ VALKEY_MAX_STORAGE_GB: 1  # Maximum storage in GB
 CERTIFICATE_ARN: >-
   arn:aws:acm:us-east-1:766808016710:certificate/9e8d8422-0c9e-4098-8d5b-ef0d76b2c614
 
-MCP_SERVER_ENV: staging
+# Staging MCP points to prod Synapse to allow for usage during stack migration.
+# Otherwise the staging MCP server could not be tested around 3-4 days each week.
+MCP_SERVER_ENV: prod
 SYNAPSE_OAUTH_CLIENT_ID: "100439"
 LOG_LEVEL: DEBUG
+
+MONITORING:
+  enabled: true
+  notification_email: "dpe@sagebase.org"

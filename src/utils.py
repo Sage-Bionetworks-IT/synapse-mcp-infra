@@ -4,6 +4,17 @@ from pathlib import Path
 from typing import Any, Dict
 
 
+def _deep_merge(base: dict, override: dict) -> dict:
+    """Recursively merge override into base, returning a new dict."""
+    result = base.copy()
+    for key, value in override.items():
+        if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+            result[key] = _deep_merge(result[key], value)
+        else:
+            result[key] = value
+    return result
+
+
 def load_context_config(env_name: str, config_dir: str = "config") -> Dict[str, Any]:
     """
     Load AWS CDK context configuration from a YAML or JSON file.
@@ -64,6 +75,6 @@ def load_context_config(env_name: str, config_dir: str = "config") -> Dict[str, 
 
     # Load and merge configs
     env_config = read_file(env_files[0])
-    merged_config = {**base_config, **env_config}
+    merged_config = _deep_merge(base_config, env_config)
 
     return merged_config
