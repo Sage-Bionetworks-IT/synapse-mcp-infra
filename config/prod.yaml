@@ -11,3 +11,7 @@ CERTIFICATE_ARN: >-
 
 MCP_SERVER_ENV: prod
 SYNAPSE_OAUTH_CLIENT_ID: "100441"
+
+MONITORING:
+  enabled: true
+  notification_email: "dpe@sagebase.org"
