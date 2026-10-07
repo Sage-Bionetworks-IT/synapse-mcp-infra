@@ -63,6 +63,7 @@ app_props = ServiceProps(
         "SYNAPSE_ENV": config.get("MCP_SERVER_ENV"),
         "SYNAPSE_OAUTH_CLIENT_ID": config.get("SYNAPSE_OAUTH_CLIENT_ID"),
         "LOG_LEVEL": config.get("LOG_LEVEL", "INFO"),
+        "FASTMCP_ENABLE_RICH_LOGGING": "false",
     },
     container_secrets=[
         ServiceSecret(
