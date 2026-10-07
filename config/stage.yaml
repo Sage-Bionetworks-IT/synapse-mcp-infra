@@ -13,7 +13,6 @@ CERTIFICATE_ARN: >-
 # Otherwise the staging MCP server could not be tested around 3-4 days each week.
 MCP_SERVER_ENV: prod
 SYNAPSE_OAUTH_CLIENT_ID: "100439"
-LOG_LEVEL: DEBUG
 
 MONITORING:
   enabled: true
