@@ -56,3 +56,39 @@ def test_service_stack_created():
             "Memory": "512",
         },
     )
+
+
+def test_service_ingress_restricted_to_vpc():
+    cdk_app = cdk.App()
+    network_stack = NetworkStack(cdk_app, "NetworkStack", vpc_cidr="10.254.192.0/24")
+    ecs_stack = EcsStack(
+        cdk_app, "EcsStack", vpc=network_stack.vpc, namespace="dev.app.io"
+    )
+    app_props = ServiceProps(
+        container_name="app",
+        container_location="ghcr.io/sage-bionetworks/app:1.0",
+        container_port=8010,
+    )
+    app_stack = ServiceStack(
+        scope=cdk_app,
+        construct_id="app",
+        vpc=network_stack.vpc,
+        cluster=ecs_stack.cluster,
+        props=app_props,
+    )
+
+    template = assertions.Template.from_stack(app_stack)
+    for sg in template.find_resources("AWS::EC2::SecurityGroup").values():
+        for rule in sg["Properties"].get("SecurityGroupIngress", []):
+            assert rule.get("CidrIp") != "0.0.0.0/0"
+            assert rule.get("CidrIpv6") != "::/0"
+    template.has_resource_properties(
+        "AWS::EC2::SecurityGroup",
+        {
+            "SecurityGroupIngress": [
+                assertions.Match.object_like(
+                    {"FromPort": 8010, "ToPort": 8010, "IpProtocol": "tcp"}
+                )
+            ]
+        },
+    )
