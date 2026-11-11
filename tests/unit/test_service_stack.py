@@ -56,6 +56,7 @@ def test_service_stack_created():
             "Memory": "512",
         },
     )
+    template.has_resource_properties("AWS::Logs::LogGroup", {"RetentionInDays": 365})
 
 
 def test_service_ingress_restricted_to_vpc():

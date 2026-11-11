@@ -120,7 +120,7 @@ class ServiceStack(cdk.Stack):
             ],
             logging=ecs.LogDrivers.aws_logs(
                 stream_prefix=f"{construct_id}",
-                log_retention=logs.RetentionDays.FOUR_MONTHS,
+                log_retention=logs.RetentionDays.ONE_YEAR,
             ),
             command=props.container_command,
             health_check=props.container_healthcheck,

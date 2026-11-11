@@ -3,6 +3,7 @@ import aws_cdk as cdk
 from aws_cdk import (
     aws_ecs as ecs,
     aws_ec2 as ec2,
+    aws_logs as logs,
 )
 
 from constructs import Construct
@@ -38,3 +39,11 @@ class EcsStack(cdk.Stack):
                 else ecs.ContainerInsights.DISABLED
             ),
         )
+
+        if container_insights:
+            logs.LogRetention(
+                self,
+                "ContainerInsightsLogRetention",
+                log_group_name=f"/aws/ecs/containerinsights/{self.cluster.cluster_name}/performance",
+                retention=logs.RetentionDays.ONE_YEAR,
+            )
