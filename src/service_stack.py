@@ -128,7 +128,7 @@ class ServiceStack(cdk.Stack):
 
         self.security_group = ec2.SecurityGroup(self, "SecurityGroup", vpc=vpc)
         self.security_group.add_ingress_rule(
-            peer=ec2.Peer.ipv4("0.0.0.0/0"),
+            peer=ec2.Peer.ipv4(vpc.vpc_cidr_block),
             connection=ec2.Port.tcp(props.container_port),
         )
 
