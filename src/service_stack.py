@@ -120,7 +120,7 @@ class ServiceStack(cdk.Stack):
             ],
             logging=ecs.LogDrivers.aws_logs(
                 stream_prefix=f"{construct_id}",
-                log_retention=logs.RetentionDays.FOUR_MONTHS,
+                log_retention=logs.RetentionDays.ONE_YEAR,
             ),
             command=props.container_command,
             health_check=props.container_healthcheck,
@@ -128,7 +128,7 @@ class ServiceStack(cdk.Stack):
 
         self.security_group = ec2.SecurityGroup(self, "SecurityGroup", vpc=vpc)
         self.security_group.add_ingress_rule(
-            peer=ec2.Peer.ipv4("0.0.0.0/0"),
+            peer=ec2.Peer.ipv4(vpc.vpc_cidr_block),
             connection=ec2.Port.tcp(props.container_port),
         )
 
