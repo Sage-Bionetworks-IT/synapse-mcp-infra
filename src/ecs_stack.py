@@ -56,7 +56,7 @@ class EcsStack(cdk.Stack):
             )
             cr.AwsCustomResource(
                 self,
-                "ContainerInsightsLogRetention",
+                "ContainerInsightsRetentionPolicy",
                 on_create=put_retention,
                 on_update=put_retention,
                 install_latest_aws_sdk=False,
