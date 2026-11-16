@@ -4,6 +4,7 @@ from aws_cdk import (
     aws_ecs as ecs,
     aws_ec2 as ec2,
     aws_logs as logs,
+    custom_resources as cr,
 )
 
 from constructs import Construct
@@ -41,9 +42,37 @@ class EcsStack(cdk.Stack):
         )
 
         if container_insights:
-            logs.LogRetention(
+            log_group_name = (
+                f"/aws/ecs/containerinsights/{self.cluster.cluster_name}/performance"
+            )
+            put_retention = cr.AwsSdkCall(
+                service="CloudWatchLogs",
+                action="putRetentionPolicy",
+                parameters={
+                    "logGroupName": log_group_name,
+                    "retentionInDays": 365,
+                },
+                physical_resource_id=cr.PhysicalResourceId.of(log_group_name),
+            )
+            cr.AwsCustomResource(
                 self,
                 "ContainerInsightsLogRetention",
-                log_group_name=f"/aws/ecs/containerinsights/{self.cluster.cluster_name}/performance",
-                retention=logs.RetentionDays.ONE_YEAR,
+                on_create=put_retention,
+                on_update=put_retention,
+                install_latest_aws_sdk=False,
+                policy=cr.AwsCustomResourcePolicy.from_sdk_calls(
+                    resources=[
+                        cdk.Stack.of(self).format_arn(
+                            service="logs",
+                            resource="log-group",
+                            resource_name=f"{log_group_name}:*",
+                            arn_format=cdk.ArnFormat.COLON_RESOURCE_NAME,
+                        )
+                    ]
+                ),
+                log_group=logs.LogGroup(
+                    self,
+                    "ContainerInsightsLogRetentionHandlerLogs",
+                    retention=logs.RetentionDays.ONE_YEAR,
+                ),
             )
