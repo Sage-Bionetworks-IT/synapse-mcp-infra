@@ -1,6 +1,7 @@
 import aws_cdk as cdk
 import aws_cdk.assertions as assertions
 
+from src.alarm_topic_stack import AlarmTopicStack
 from src.ecs_stack import EcsStack
 from src.load_balancer_stack import LoadBalancerStack
 from src.monitoring_stack import MonitoringStack
@@ -18,6 +19,7 @@ def _create_monitoring_template(monitoring_config=None):
         }
 
     app = cdk.App()
+    topic = AlarmTopicStack(app, "Alarms", notification_email="test@example.com")
     network = NetworkStack(app, "Net", vpc_cidr="10.0.0.0/24")
     ecs = EcsStack(
         app, "Ecs", vpc=network.vpc, namespace="test.io", container_insights=True
@@ -48,21 +50,9 @@ def _create_monitoring_template(monitoring_config=None):
         load_balancer=lb.alb,
         target_group=svc.target_group,
         monitoring_config=monitoring_config,
+        alarm_topic=topic.alarm_topic,
     )
     return assertions.Template.from_stack(monitoring)
-
-
-def test_monitoring_stack_creates_sns_topic():
-    template = _create_monitoring_template()
-    template.resource_count_is("AWS::SNS::Topic", 1)
-
-
-def test_monitoring_stack_creates_email_subscription():
-    template = _create_monitoring_template()
-    template.has_resource_properties(
-        "AWS::SNS::Subscription",
-        {"Protocol": "email", "Endpoint": "test@example.com"},
-    )
 
 
 def test_monitoring_stack_creates_all_alarms():
@@ -101,25 +91,3 @@ def test_monitoring_stack_custom_cpu_threshold():
             "MetricName": "CPUUtilization",
         },
     )
-
-
-def test_monitoring_stack_no_slack_lambda_without_webhook():
-    template = _create_monitoring_template()
-    template.resource_count_is("AWS::Lambda::Function", 0)
-
-
-def test_monitoring_stack_creates_slack_lambda_with_webhook():
-    template = _create_monitoring_template(
-        monitoring_config={
-            "enabled": True,
-            "notification_email": "test@example.com",
-            "slack_webhook_url": "https://hooks.slack.com/services/T/B/x",
-        }
-    )
-    template.resource_count_is("AWS::Lambda::Function", 1)
-
-
-def test_monitoring_stack_exports_topic_arn():
-    template = _create_monitoring_template()
-    outputs = template.find_outputs("*")
-    assert any("AlarmTopicArn" in key for key in outputs)

@@ -1,6 +1,8 @@
 import aws_cdk as cdk
 
+from src.alarm_topic_stack import AlarmTopicStack
 from src.ecs_stack import EcsStack
+from src.lambda_error_alarms import LambdaErrorAlarms
 from src.load_balancer_stack import LoadBalancerStack
 from src.monitoring_stack import MonitoringStack
 from src.network_stack import NetworkStack
@@ -22,6 +24,15 @@ MONITORING_CONFIG = config.get("MONITORING", {})
 if TAGS:
     for key, value in TAGS.items():
         cdk.Tags.of(cdk_app).add(key, value)
+
+alarm_topic = None
+if MONITORING_CONFIG.get("enabled", False):
+    alarm_topic = AlarmTopicStack(
+        scope=cdk_app,
+        construct_id=f"{STACK_NAME_PREFIX}-alarms",
+        notification_email=MONITORING_CONFIG["notification_email"],
+        slack_webhook_url=MONITORING_CONFIG.get("slack_webhook_url", ""),
+    ).alarm_topic
 
 network_stack = NetworkStack(
     scope=cdk_app,
@@ -109,7 +120,10 @@ if MONITORING_CONFIG.get("enabled", False):
         load_balancer=load_balancer_stack.alb,
         target_group=app_stack.target_group,
         monitoring_config=MONITORING_CONFIG,
+        alarm_topic=alarm_topic,
     )
     monitoring_stack.add_dependency(app_stack)
+
+cdk.Aspects.of(cdk_app).add(LambdaErrorAlarms(alarm_topic))
 
 cdk_app.synth()
